@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="logo.png" width="96" alt="his-birthday logo">
-</p>
+
 
 ## 🎉 his-birthday
 ![his-birthday cover](cover.png)
