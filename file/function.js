@@ -14,10 +14,20 @@ startScreen.addEventListener('click', () => {
     overlay.style.display = 'block';
     messageCard.style.display = 'flex';
 
-    // Start and control the audio
-    audioPlayer.volume = 0.25;
+    // Force the audio to play
+    audioPlayer.muted = false;
+    audioPlayer.volume = 0.5;
     audioPlayer.currentTime = startTime;
-    audioPlayer.play();
+    const playPromise = audioPlayer.play();
+
+    if (playPromise !== undefined) {
+        playPromise.then(_ => {
+            // Autoplay started!
+        }).catch(error => {
+            // Autoplay was prevented.
+            console.error("Audio play failed:", error);
+        });
+    }
 
     // Custom looping
     audioPlayer.addEventListener('ended', function() {
