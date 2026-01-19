@@ -1,4 +1,6 @@
+
 ## 🎉 his-birthday
+![his-birthday cover](cover.png)
 
 A minimal, interactive birthday microsite crafted as a personal digital experience for a friend.  
 Designed to feel thoughtful, immersive, and calm—without unnecessary gimmicks.
