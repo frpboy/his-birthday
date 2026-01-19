@@ -117,3 +117,29 @@ If you’re reading this and thinking:
 > “This feels unusually thoughtful for a birthday page…”
 
 That was the goal.
+
+
+---
+
+## 🚀 Deployment (GitHub Pages)
+
+This project can be deployed easily using **GitHub Pages**.
+
+### Steps:
+1. Go to the repository **Settings**
+2. Navigate to **Pages**
+3. Under **Source**, select:
+   - Branch: `main`
+   - Folder: `/ (root)`
+4. Save
+
+Once enabled, the site will be available at:
+
+https://<your-username>.github.io/his-birthday/
+
+### Notes:
+- Ensure `index.html` is in the root directory
+- Audio and assets must use relative paths
+- First load may take a minute after enabling Pages
+
+No build step required.
