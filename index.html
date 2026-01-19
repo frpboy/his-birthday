@@ -59,6 +59,9 @@
             animation: fadeIn 0.6s ease-in-out forwards, softPulse 2s ease-in-out 1.5s 1;
             opacity: 0;
         }
+        body.reduce-motion .card-container {
+            animation: none;
+        }
         .card {
             background: rgba(10, 10, 10, 0.5);
             border-radius: 16px;
@@ -137,6 +140,9 @@
         .heart-pulse {
             animation: heart-pulse-animation 1s ease-in-out;
         }
+        body.reduce-motion .heart-pulse {
+            animation: none;
+        }
         @keyframes heart-pulse-animation {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); }
@@ -190,20 +196,106 @@
         const heart = document.getElementById('heart');
         const easterEgg = document.getElementById('easter-egg');
         const githubLink = document.getElementById('github-link');
-        
+
+        let canUnlock = true;
         let eggShown = false;
+        let inactivityTimer;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.body.classList.add('reduce-motion');
+        }
+
+        function fadeOutAudio() {
+            let vol = audio.volume;
+            const fadeOut = setInterval(() => {
+                if (vol > 0.01) {
+                    vol -= 0.01;
+                    if (vol < 0) vol = 0;
+                    audio.volume = vol;
+                } else {
+                    audio.pause();
+                    clearInterval(fadeOut);
+                }
+            }, 100);
+        }
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(fadeOutAudio, 210000); // 3.5 minutes
+        }
 
         function unlockExperience() {
+            if (!canUnlock) return;
+            canUnlock = false;
+            setTimeout(() => { canUnlock = true; }, 1000);
+
             if (startScreen.style.display === 'none') return;
 
             startScreen.style.display = 'none';
-            canvas.style.display = 'block';
+
+            if (!document.body.classList.contains('reduce-motion')) {
+                canvas.style.display = 'block';
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+                const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const nums = '0123456789';
+                const alphabet = katakana + latin + nums;
+                const fontSize = 16;
+                const columns = canvas.width / fontSize;
+                const rainDrops = [];
+                for (let x = 0; x < columns; x++) {
+                    rainDrops[x] = 1;
+                }
+                
+                let lastTime = 0;
+                const fps = 30;
+                const nextFrame = 1000 / fps;
+                let timer = 0;
+
+                const draw = (timeStamp) => {
+                    const deltaTime = timeStamp - lastTime;
+                    lastTime = timeStamp;
+
+                    if (timer > nextFrame) {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = '#0F0';
+                        ctx.font = fontSize + 'px monospace';
+                        for (let i = 0; i < rainDrops.length; i++) {
+                            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                            ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                            if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                                rainDrops[i] = 0;
+                            }
+                            rainDrops[i]++;
+                        }
+                        timer = 0;
+                    } else {
+                        timer += deltaTime;
+                    }
+                    requestAnimationFrame(draw);
+                };
+                draw(0);
+
+                window.addEventListener('resize', () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                });
+            }
+            
             overlay.style.display = 'block';
             card.style.display = 'flex';
+
+            if (document.body.classList.contains('reduce-motion')) {
+                card.style.opacity = '1';
+            }
 
             audio.volume = 0;
             audio.currentTime = 66;
             audio.play();
+            resetInactivityTimer();
 
             let vol = 0;
             const fade = setInterval(() => {
@@ -214,62 +306,13 @@
                     clearInterval(fade);
                 }
             }, 120);
-
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
-            const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const nums = '0123456789';
-            const alphabet = katakana + latin + nums;
-            const fontSize = 16;
-            const columns = canvas.width / fontSize;
-            const rainDrops = [];
-            for (let x = 0; x < columns; x++) {
-                rainDrops[x] = 1;
-            }
-            
-            let lastTime = 0;
-            const fps = 30;
-            const nextFrame = 1000 / fps;
-            let timer = 0;
-
-            const draw = (timeStamp) => {
-                const deltaTime = timeStamp - lastTime;
-                lastTime = timeStamp;
-
-                if (timer > nextFrame) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#0F0';
-                    ctx.font = fontSize + 'px monospace';
-                    for (let i = 0; i < rainDrops.length; i++) {
-                        const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                        ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-                        if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                            rainDrops[i] = 0;
-                        }
-                        rainDrops[i]++;
-                    }
-                    timer = 0;
-                } else {
-                    timer += deltaTime;
-                }
-                requestAnimationFrame(draw);
-            };
-
-            draw(0);
-
-            window.addEventListener('resize', () => {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
         }
 
         startScreen.addEventListener('click', unlockExperience);
 
         let startY = 0;
         document.addEventListener('touchstart', (e) => {
+            resetInactivityTimer();
             startY = e.touches[0].clientY;
         });
 
@@ -283,6 +326,7 @@
         let buffer = '';
         const secret = 'hero';
         document.addEventListener('keydown', (e) => {
+            resetInactivityTimer();
             buffer += e.key.toLowerCase();
             buffer = buffer.slice(-secret.length);
             if (buffer === secret && !eggShown) {
@@ -344,8 +388,10 @@
         } else if (hour >= 12 && hour < 18) {
             timeMessage.textContent = "Hope your day is treating you well.";
         } else {
-            timeMessage.textContent = "As the day ends, take a moment. You’ve done enough for today.";
+            timeMessage.textContent = "As the day ends, take a moment. You’ve done enough for today…";
         }
+
+        // If this ever gets opened again years from now: it was built with care.
     </script>
 </body>
 </html>
