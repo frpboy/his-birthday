@@ -33,6 +33,9 @@
             z-index: 1;
             display: none;
         }
+        body.night #matrix-canvas {
+            opacity: 0.75;
+        }
         .overlay {
             position: fixed;
             top: 0;
@@ -178,6 +181,7 @@
     <audio id="audio-player" src="time.mp3"></audio>
 
     <script>
+        // Built for one person, one day. Everything else is intentional restraint.
         const startScreen = document.getElementById('start-screen');
         const canvas = document.getElementById('matrix-canvas');
         const card = document.getElementById('message-card');
@@ -330,6 +334,10 @@
         }
 
         const hour = new Date().getHours();
+        if (hour >= 18 || hour < 5) {
+            document.body.classList.add('night');
+        }
+
         const timeMessage = document.getElementById('time-message');
         if (hour >= 5 && hour < 12) {
             timeMessage.textContent = "Good morning. Start today calm, focused, and confident.";
