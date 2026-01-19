@@ -87,6 +87,10 @@
         .card p:last-child {
             margin-bottom: 0;
         }
+        #heart {
+            cursor: pointer;
+            display: inline-block;
+        }
         #gesture-hint {
             position: absolute;
             bottom: 60px;
@@ -128,6 +132,32 @@
         #github-link:hover img {
             border-color: rgba(255, 255, 255, 0.9);
         }
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 16px;
+            opacity: 0;
+            animation: fall 4s ease-out forwards;
+        }
+        @keyframes fall {
+            0% {
+                opacity: 1;
+                transform: translateY(-20px) rotateZ(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(105vh) rotateZ(720deg);
+            }
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -151,6 +181,7 @@
     </style>
 </head>
 <body>
+    <div id="confetti-container"></div>
     <div id="start-screen">
         <div id="gesture-hint">SWIPE UP</div>
     </div>
@@ -184,7 +215,7 @@
         <img src="https://github.com/frpboy.png" alt="GitHub Profile">
     </a>
     
-    <audio id="audio-player" src="time.mp3"></audio>
+    <audio id="audio-player" src="time.mp3" loop></audio>
 
     <script>
         // Built for one person, one day. Everything else is intentional restraint.
@@ -196,32 +227,13 @@
         const heart = document.getElementById('heart');
         const easterEgg = document.getElementById('easter-egg');
         const githubLink = document.getElementById('github-link');
+        const confettiContainer = document.getElementById('confetti-container');
 
         let canUnlock = true;
         let eggShown = false;
-        let inactivityTimer;
 
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             document.body.classList.add('reduce-motion');
-        }
-
-        function fadeOutAudio() {
-            let vol = audio.volume;
-            const fadeOut = setInterval(() => {
-                if (vol > 0.01) {
-                    vol -= 0.01;
-                    if (vol < 0) vol = 0;
-                    audio.volume = vol;
-                } else {
-                    audio.pause();
-                    clearInterval(fadeOut);
-                }
-            }, 100);
-        }
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(fadeOutAudio, 210000); // 3.5 minutes
         }
 
         function unlockExperience() {
@@ -255,6 +267,7 @@
                 let timer = 0;
 
                 const draw = (timeStamp) => {
+                    if(startScreen.style.display !== 'none') return;
                     const deltaTime = timeStamp - lastTime;
                     lastTime = timeStamp;
 
@@ -295,7 +308,6 @@
             audio.volume = 0;
             audio.currentTime = 66;
             audio.play();
-            resetInactivityTimer();
 
             let vol = 0;
             const fade = setInterval(() => {
@@ -312,7 +324,6 @@
 
         let startY = 0;
         document.addEventListener('touchstart', (e) => {
-            resetInactivityTimer();
             startY = e.touches[0].clientY;
         });
 
@@ -326,7 +337,6 @@
         let buffer = '';
         const secret = 'hero';
         document.addEventListener('keydown', (e) => {
-            resetInactivityTimer();
             buffer += e.key.toLowerCase();
             buffer = buffer.slice(-secret.length);
             if (buffer === secret && !eggShown) {
@@ -371,6 +381,34 @@
             setTimeout(hideEgg, 5000);
         }
 
+        function createConfetti() {
+            if(document.body.classList.contains('reduce-motion')) return;
+            const confettiCount = 100;
+            const colors = ['#e63946', '#f1faee', '#a8dadc', '#457b9d', '#1d3557'];
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = Math.random() * -20 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                confetti.style.animationDelay = (Math.random() * 0.2) + 's';
+                confettiContainer.appendChild(confetti);
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }
+
+        heart.addEventListener('click', () => {
+            if (document.body.classList.contains('reduce-motion')) return;
+            heart.classList.add('heart-pulse');
+            createConfetti();
+            setTimeout(() => {
+                heart.classList.remove('heart-pulse');
+            }, 1000);
+        });
+
         const today = new Date();
         const birthday = { day: 18, month: 1 };
         if (today.getDate() === birthday.day && today.getMonth() + 1 === birthday.month) {
@@ -378,10 +416,6 @@
         }
 
         const hour = new Date().getHours();
-        if (hour >= 18 || hour < 5) {
-            document.body.classList.add('night');
-        }
-
         const timeMessage = document.getElementById('time-message');
         if (hour >= 5 && hour < 12) {
             timeMessage.textContent = "Good morning. Start today calm, focused, and confident.";
